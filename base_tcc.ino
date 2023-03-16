@@ -18,6 +18,7 @@
 
 #define blink_esp32 2 
 #define DHTPIN 18
+#define DHTPIN2 23
 #define DHTTYPE DHT11
 #define oneWireBus 4
 
@@ -36,6 +37,7 @@ IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 DHT dht(DHTPIN, DHTTYPE);
+DHT dht2(DHTPIN2, DHTTYPE);
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 
@@ -48,6 +50,7 @@ void setup()
   
   sensors.begin();
   dht.begin();
+  dht2.begin();
   
   delay(100);
   Serial.println();
@@ -159,7 +162,32 @@ void getReadings()
   //float temperature = sensors.getTempCByIndex(0);
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
+  float temperature2 = dht2.readTemperature();
+  float humidity2 = dht2.readHumidity();
   bool onOffKey = false;
 
-  Serial.print("Temperatura: " + String(temperature) + " Umidade: " + String(humidity) + " Chave: " + onOffKey + "\n");
+  if(!isnan(temperature)){
+    Serial.print("DHT1 -> Temperatura: ");
+    Serial.println(temperature);
+  }
+  
+  if(!isnan(humidity)){
+    Serial.print("DHT1 -> Umidade: ");
+    Serial.println(humidity);
+    Serial.println();
+  }
+   
+  if(!isnan(temperature2)){
+    Serial.print("DHT2 -> Temperatura: ");
+    Serial.println(temperature2);
+  }
+  
+  if(!isnan(humidity2)){
+    Serial.print("DHT2 -> Umidade: ");
+    Serial.println(humidity2);
+    Serial.println();
+  }
+  
+
+
 }
