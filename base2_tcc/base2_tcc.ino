@@ -1,4 +1,4 @@
-//____params?param1=on&param2=value2
+//____params?esp32led=off&infrared=off&relay=on
 
 #include <WiFi.h>
 #include <WebServer.h>
@@ -52,7 +52,7 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
   }
   
   //Send a response back to the client
-  server.send(200, "text/html", "Parameters received.<br><br>ESP32 Led: " + ESP32LedParam + "<br><br>Infrared: " + infraredParam + "<br><br>Relay: " + relayParam + "<br>"");
+  server.send(200, "text/html", "Parameters received.<br><br>ESP32 Led: " + ESP32LedParam + "<br><br>Infrared: " + infraredParam + "<br><br>Relay: " + relayParam + "<br>");
 }
 
 void setup() { 
