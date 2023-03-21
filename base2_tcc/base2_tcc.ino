@@ -29,7 +29,7 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
 
   //ESP32Led Parameters
   if (ESP32LedParam == "on") { 
-    digitalWrite(esp32ledlay, HIGH);
+    digitalWrite(esp32led, HIGH);
   } 
   else if (ESP32LedParam == "off") { 
     digitalWrite(esp32led, LOW);
