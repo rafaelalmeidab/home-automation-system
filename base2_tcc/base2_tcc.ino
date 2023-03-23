@@ -19,7 +19,9 @@
 const char* ssid = "RBMWEB";
 const char* password= "rbmweb01";
 
-DHT dht(DHTPIN, DHTTYPE);
+float lastTemperature, lastHumidity;
+
+DHT dht(dht11, DHTTYPE);
 
 WebServer server(80); // create a web server on port 80
 
@@ -77,7 +79,7 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
   }
   
   //Send a response back to the client
-  server.send(200, "text/html", "Parameters received.<br><br>DHT11<br>Temperature: " + temperature + "<br>Humidity: " + humidity + "<br><br>ESP32 Led: " + ESP32LedParam + "<br><br>Infrared: " + infraredParam + "<br><br>Relay: " + relayParam + "<br>");
+  server.send(200, "text/html", "Parameters received.<br><br>DHT11<br>Temperature: " + (String)temperature + "<br>Humidity: " + (String)humidity + "<br><br>ESP32 Led: " + ESP32LedParam + "<br><br>Infrared: " + infraredParam + "<br><br>Relay: " + relayParam + "<br>");
 }
 
 void setup() { 
