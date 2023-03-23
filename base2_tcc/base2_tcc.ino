@@ -1,9 +1,12 @@
 //____params?esp32led=off&infrared=off&relay=on
 
+#include <DHT.h>
 #include <WiFi.h>
 #include <WebServer.h>
 
+#define DHTTYPE DHT11
 #define esp32led 2
+#define dht11 18
 #define infrared 22
 #define relay 23
 
@@ -16,6 +19,8 @@
 const char* ssid = "RBMWEB";
 const char* password= "rbmweb01";
 
+DHT dht(DHTPIN, DHTTYPE);
+
 WebServer server(80); // create a web server on port 80
 
 void handleRoot() { // handle the root URL (/)
@@ -27,6 +32,26 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
   String infraredParam  = server.arg("infrared");
   String relayParam     = server.arg("relay");
 
+  float temperature = dht.readTemperature();
+  float humidity    = dht.readHumidity();
+
+  //DHT11 Parameters
+  if(isnan(temperature)) 
+  {
+    temperature = lastTemperature;
+  }
+  else 
+  {
+    lastTemperature = temperature;
+  }
+  if(isnan(humidity)) {
+    humidity = lastHumidity;
+  }
+  else 
+  {
+    lastHumidity = humidity;
+  }
+  
   //ESP32Led Parameters
   if (ESP32LedParam == "on") { 
     digitalWrite(esp32led, HIGH);
@@ -52,14 +77,15 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
   }
   
   //Send a response back to the client
-  server.send(200, "text/html", "Parameters received.<br><br>ESP32 Led: " + ESP32LedParam + "<br><br>Infrared: " + infraredParam + "<br><br>Relay: " + relayParam + "<br>");
+  server.send(200, "text/html", "Parameters received.<br><br>DHT11<br>Temperature: " + temperature + "<br>Humidity: " + humidity + "<br><br>ESP32 Led: " + ESP32LedParam + "<br><br>Infrared: " + infraredParam + "<br><br>Relay: " + relayParam + "<br>");
 }
 
 void setup() { 
   pinMode(esp32led, OUTPUT); 
   pinMode(infrared, OUTPUT); 
   pinMode(relay, OUTPUT);
-  
+ 
+  dht.begin();
   Serial.begin(115200); // start serial communication
   WiFi.begin(ssid, password); // connect to Wi-Fi network
 
