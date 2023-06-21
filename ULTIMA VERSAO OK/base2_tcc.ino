@@ -53,11 +53,12 @@ WebServer server(80);
 //    previousMillis = currentMillis;
 //  }
 //}
-IRAM_ATTR void zero_crosss_int()
+
+void IRAM_ATTR zero_crosss_int()
 {
     // Cálculo do ângulo de disparo: 60Hz-> 8.33ms (1/2 ciclo)
     // (8333us - 8.33us) / 256 = 32 (aprox)
-    int powertime = (65*(256-amplitude));
+    int powertime = (32*(256-amplitude));
     // Mantém o circuito desligado por powertime microssegundos
     delayMicroseconds(powertime);
     // Envia sinal ao TRIAC para que ele passe a conduzir
@@ -66,32 +67,7 @@ IRAM_ATTR void zero_crosss_int()
     delayMicroseconds(8.33);
     // Desliga o pulso
     digitalWrite(pulsoTriac, LOW);
-}
-
-IRAM_ATTR void zero_crosss_int2()
-{
-  //Cálculo do ângulo de disparo: 60Hz -> 8,33ms (1/2 ciclo)
-  //(8333us - 8,33us) / 333 = 25 (aproximadamente)
-  
-  int powertime = (25*(333-amplitude));
-  if(powertime <= 325){
-    digitalWrite(pulsoTriac, HIGH);
   }
-  else if(powertime >= 8325){
-    digitalWrite(pulsoTriac, LOW);
-  }
-  else if((powertime > 0) && (powertime < 8325)){
-    //Mantém o circuito desligado por powertime microssegundos
-    delayMicroseconds(powertime);
-    //Envia sinal ao TRIAC para que ele passe a conduzir
-    digitalWrite(pulsoTriac, HIGH);
-   //Espera alguns microssegundos para que o TRIAC perceba o pulso
-   delayMicroseconds(8.33);
-   //Desliga o pulso
-   digitalWrite(pulsoTriac, LOW);
-  }
-}
-
 
 //void IRAM_ATTR zeroCrossing() {
 //  static unsigned int counter = 0;
@@ -142,8 +118,7 @@ void setup() {
 
   //attachInterrupt(digitalPinToInterrupt(dpz), zeroCrossing, RISING);
   //attachInterrupt(digitalPinToInterrupt(dpz), zeroCrossingISR, RISING);
-  //attachInterrupt(digitalPinToInterrupt(dpz), zero_crosss_int, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(dpz), zero_crosss_int2, RISING);
+  attachInterrupt(digitalPinToInterrupt(dpz), zero_crosss_int, CHANGE);
   //attachInterrupt(digitalPinToInterrupt(dpz), angle, CHANGE);
   //attachInterrupt(digitalPinToInterrupt(dpz), angle2, FALLING);
 
@@ -194,15 +169,15 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
   String relayParam        = server.arg("relay");
   amplitude                = (server.arg("amplitude").toInt());
 
-  //if (amplitude > 255) {
-  if (amplitude > 300) {
-    amplitude = 300;
+  
+  if (amplitude > 255) {
+    amplitude = 255;
   }
   else if (amplitude < 0) {
     amplitude = 0;
   }
   
-  //amplitude = map(amplitude, 0, 100, 0, 255);
+  amplitude = map(amplitude, 0, 100, 0, 255);
   //delay(250);
 
   sensors.requestTemperatures();
