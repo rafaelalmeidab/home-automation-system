@@ -11,22 +11,21 @@
 #define esp32led 2
 #define LED 4
 #define infrared 12
+#define relay 13
 #define dht11 18
 #define ds18b20 21
 #define dpz 27
 #define pulsoTriac 32
-#define relay 34
 #define DHTTYPE DHT11
 
 const char* ssid[] = {"Rafael - 2.4G", "Rio Cable - Rafael 2.4", "RBMWEB", "Fernanda 2.4G"};
 const char* password[] = {"34627545", "rafael1061", "rbmweb01", "fernandawom"};
 const int numNetworks = 3;
 
-boolean isZeroCrossing = false, disparoTriac = false;
 float lastTemperature, lastHumidity;
-int count = 0, amplitude = 0, lastAmplitude = 0, time_triac = 0, angle = 0;    
+int count = 0, amplitude = 0, lastAmplitude = 0;
+boolean isZeroCrossing = false, disparoTriac = false;
 unsigned long millisServerHandle = millis();
-volatile long luminosidade = 0;  // 0 a 100 
 
 DHT dht(dht11, DHTTYPE);
 IRsend irsend(infrared);
@@ -43,37 +42,17 @@ void IRAM_ATTR passagemPorZero()
   disparoTriac = true;
 }
 
-void zeroCross()  {
-  if (luminosidade>100) luminosidade=100;
-  if (luminosidade<0) luminosidade=0;
-  long t1 = 8200L * (100L - luminosidade) / 100L;      
-  delayMicroseconds(t1);   
-  digitalWrite(pulsoTriac, HIGH);  
-  delayMicroseconds(6);      // t2
-  digitalWrite(pulsoTriac, LOW);   
-}
-
-// void disparoTRIAC_BTA122(int amplitude){
-//   // Cálculo do ângulo de disparo: 60Hz-> 8.33ms (1/2 ciclo)
-//   // (8333us - 8.33us) / 256 = 32 (aprox)
-//   int powertime = (32*(256-amplitude));
-//   // Mantém o circuito desligado por powertime microssegundos
-//   delayMicroseconds(powertime);
-//   // Envia sinal ao TRIAC para que ele passe a conduzir
-//   digitalWrite(pulsoTriac, HIGH);
-//   // Espera alguns microssegundos para que o TRIAC perceba o pulso
-//   delayMicroseconds(8.33);
-//   // Desliga o pulso
-//   digitalWrite(pulsoTriac, LOW);
-// }
-
 void disparoTRIAC_BTA12(int amplitude){
-  for(int i=0; i<time_triac; i++){
-    delay(2);
-  }
-  
+  // Cálculo do ângulo de disparo: 60Hz-> 8.33ms (1/2 ciclo)
+  // (8333us - 8.33us) / 256 = 32 (aprox)
+  int powertime = (32*(256-amplitude));
+  // Mantém o circuito desligado por powertime microssegundos
+  delayMicroseconds(powertime);
+  // Envia sinal ao TRIAC para que ele passe a conduzir
   digitalWrite(pulsoTriac, HIGH);
-  delay(1);
+  // Espera alguns microssegundos para que o TRIAC perceba o pulso
+  delayMicroseconds(8.33);
+  // Desliga o pulso
   digitalWrite(pulsoTriac, LOW);
 }
 
@@ -97,8 +76,7 @@ void setup() {
   pinMode(dpz, INPUT);
   pinMode(pulsoTriac, OUTPUT);
 
-  // attachInterrupt(digitalPinToInterrupt(dpz), passagemPorZero, RISING);
-  attachInterrupt(digitalPinToInterrupt(dpz), zeroCross, RISING);
+  attachInterrupt(digitalPinToInterrupt(dpz), passagemPorZero, CHANGE);
 
   dht.begin();
   sensors.begin();
@@ -212,11 +190,10 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
   String relayParam        = server.arg("relay");
   amplitude                = (server.arg("amplitude").toInt());
 
-  amplitude = map(amplitude, 0, 100, 0, 180);
-  luminosidade = (byte)map(amplitude, 0, 100, 0, 180);
-
-  if (amplitude > 180) {
-    amplitude = 180;
+  amplitude = map(amplitude, 0, 100, 0, 255);
+  
+  if (amplitude > 255) {
+    amplitude = 255;
   }
   else if (amplitude < 0) {
     amplitude = 0;
@@ -225,10 +202,6 @@ void handleParams() { // handle URL with parameters (/params?param1=value1&param
     amplitude = amplitude;
   }
 
-  time_triac = (amplitude*8.33)/180;                
-
-  // amplitude = map(amplitude, 0, 1023, 10, 90);
-  
   sensors.requestTemperatures();
   float temperature = sensors.getTempCByIndex(0);
   float humidity    = dht.readHumidity();
